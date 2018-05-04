@@ -36,9 +36,10 @@ def convert(image):
     result[image == 255] = 0
     result[image == 0] = 255
     
-    return result
+    return result  
 
-def get_median(data):
+
+def get_most_common(data):
 # =============================================================================   
 #   data_ = sorted(data)
 
@@ -73,12 +74,9 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
     for i in range(height):
         hist_row[i] = np.sum(img_staff_lines[i, :] / 255)  
     
-# =============================================================================
 #     plt.figure
 #     plt.bar(range(height), hist_row)
-# =============================================================================
-    
-    
+      
     idx_staff = []
     for i in range(height):
         if hist_row[i] > 0.1 * width:
@@ -87,13 +85,16 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
     # modfiy the index of staff to fit different size of images
     idx_staff_new = []
     flag = True
-    for i in range(len(idx_staff)-1):
+    for i in range(len(idx_staff) - 1):
+        
         if idx_staff[i+1] - idx_staff[i] == 1:
             flag = False
         else:
             flag = True
+            
         if flag:
             idx_staff_new.append(idx_staff[i])
+            
     idx_staff_new.append(idx_staff[-1])
     
     return img_staff_lines, idx_staff_new
@@ -181,3 +182,17 @@ def compute_moments(contours):
     moments = moments[tmp_arg]
     
     return moments
+
+def determine_edge(hist, median):
+    width = len(hist)
+    
+    count = 0
+    for i in range(width):        
+        if hist[i] > median and count == 0:
+            count += 1
+            start = i - 1
+            
+        if hist[i] <= median and count == 1:
+            end = i - 1
+            break
+    return start, end
