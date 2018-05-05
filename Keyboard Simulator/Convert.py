@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+'''
+Keyboard Simulator.
+
+Given input, it can compile the music and output a WAV file.
+'''
 import pysynth_b as ps 
 import pyaudio  
 import wave  
@@ -16,10 +20,8 @@ test = (('e', 4),('e', 4), ('f', 4), ('g', 4),('g', 4),('f', 4),('e', 4),('d', 4
 ps.make_wav(test, fn = "test.wav")
 
 
-#define stream chunk   
 chunk = 1024  
-  
-#open a wav format music  
+
 f = wave.open("test.wav","rb")  
 #instantiate PyAudio  
 p = pyaudio.PyAudio()  
