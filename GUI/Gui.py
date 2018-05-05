@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 '''
 GUI for SMIRKs
+Before using , please make sure you have installed all the dependencies below.
+Basically, it is only compatiable with Python 2.7. You need to substitute Tkinter with tkinter in Python 3 (which is convenient)
 '''
 import tkFileDialog
 import Tkinter
 import tkMessageBox
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import copy
 import scipy.ndimage
 from SMIRKs_head import *
-import time # for test purpose
 import pysynth_b as ps 
 import pyaudio  
 import wave  
@@ -42,12 +41,10 @@ class Gui(object):
 
     def askinputfile(self):
         self.input.delete('0',Tkinter.END)
-        #self.input_path = tkFileDialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
         self.input_path = tkFileDialog.askopenfilename()
         self.input.insert(Tkinter.END,self.input_path)
     def askoutputpath(self):
         self.destination.delete('0',Tkinter.END)
-        #self.destination_path = tkFileDialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         self.destination_path = tkFileDialog.askdirectory()
         self.destination.insert(Tkinter.END,self.destination_path)
 
@@ -95,7 +92,6 @@ class Gui(object):
 
         img_staff_lines, idx_staff = get_staff_lines(self.img_bw, dash_filter, staff_line_filter)
 
-        #cv2.imshow('test',img_staff_lines)
         num_staff = len(idx_staff) // 5
         diff_staff = (idx_staff[4] - idx_staff[0])  // 4
 
@@ -189,9 +185,7 @@ class Gui(object):
             else:
                 type_clef = 0; # Bass
                 
-            #output_clef.append(type_clef) 
-            
-            # Deal with the special situation when the type of clef is 'bass'
+
             if type_clef == 0:
                 count = 0
                 for i in range(clef_end, wid_div):
@@ -202,9 +196,6 @@ class Gui(object):
                         clef_end = i
                         break
             
-                        
-            #img_tmp = img_div[:, clef_end : -1]           
-            # After determine the type of clef, we no longer need them.
             img_div_set[it] = img_div[:, clef_end : -1]
 
 
@@ -230,16 +221,10 @@ class Gui(object):
         output_note_type = []
         
         for it in range(len(img_div_set)):
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
-            # Detect different types
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
             img_div = img_div_set[it]
             div_staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
             diff_staff = idx_staff[1] - idx_staff[0]
-            
-            # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-            # a) Detect the position of quarter and eighth notes
-            # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
+
             
             # Quarter note
             disk_filter = generate_disk_filter(diff_staff//2.5)
@@ -267,16 +252,9 @@ class Gui(object):
             for i in range(len(contours3)):
                 if contour_area_set[i] > median + 1.3 * std:
                     contour_dash.append(contours3[i])           
-            #cv2.drawContours(canvas, contour_dash, -1, 1)  
-
 
             moments_dash = compute_moments(contour_dash)
-            
-            # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-            # b) Detect the position of whole and half notes
-            # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-            #img_note = remove_staff_lines(img_div, div_staff_lines, diff_staff)
-            #img_note = cv2.dilate(img_note, np.ones((2,2)), iterations = 1)
+
             staff_line_filter = np.ones([1, 20])
             staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
             img_note = remove_staff_lines(img_div, staff_lines)
@@ -289,25 +267,8 @@ class Gui(object):
             tmp = cv2.erode(img_note2, disk1, iterations = 1)
             img_note_new = cv2.dilate(tmp, disk2, iterations = 1)
             
-            im2, contours2, hierarchy2 = cv2.findContours(img_note_new, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)    
-        # =============================================================================
-        #     n_notes2 = len(contours2)   
-        #     moments2 = np.empty((0, 2))
-        #     for i in range(n_notes2):
-        #         cnt = contours2[i]
-        #         M = cv2.moments(cnt)
-        #         col_ind = int(M['m10']/M['m00'])
-        #         row_ind = int(M['m01']/M['m00'])  # We only care about its row index
-        #         centroid = np.array([row_ind, col_ind])
-        #         moments2 = np.vstack((moments2, centroid))
-        # =============================================================================        
+            im2, contours2, hierarchy2 = cv2.findContours(img_note_new, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)     
             moments2 = compute_moments(contours2)   
-        
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
-            # 1) Determine the position
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
-            
-            # Sort to make sure the notes are in order
             moments = np.vstack((moments1, moments2))  
             tmp_arg = np.argsort(moments[:, 1]) 
             moments = moments[tmp_arg]
@@ -319,11 +280,7 @@ class Gui(object):
                 note_pos.append(output)   
                 
             output_note_pos.append(note_pos)
-            
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
-            # 2) Determine the type
-            # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
-            # Quarter and eighth note
+
             n_note1 = moments1.shape[0]
             note_type1 = np.column_stack((moments1[:, 1], [4] * n_note1))  
             for i in range(len(moments_dash)):
