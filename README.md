@@ -1,5 +1,7 @@
 # Sheet-Note-Recognization
 
-Digital Image Processsing 
+Digital Image Processsing Final Project
 
-He Huan Modified
+Sheet Music Intelligent Reader & Keyboard Simulator (SMIRKs)
+
+File Description:
