@@ -15,7 +15,7 @@ from SMIRKs_head import *
 # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
 # Setup
 # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
-img = cv2.imread('Twinkle Twinkle Little Star.png')
+img = cv2.imread('Bolero.png')
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 (thresh, img_bw) = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 img_bw = convert(img_bw)
@@ -161,7 +161,7 @@ for it in range(len(img_div_set)):
     else:
          type_clef = 0; # Bass
          
-    #output_clef.append(type_clef) 
+    output_clef.append(type_clef) 
     
     # Deal with the special situation when the type of clef is 'bass'
 
@@ -241,14 +241,14 @@ for it in range(len(img_div_set)):
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
     # Detect types
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
-    img_div = img_div_set[it]
-    div_staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
-    diff_staff = idx_staff[1] - idx_staff[0]
+    img_div = img_div_set[0]
        
+    div_staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
     # a) Detect quarter and eighth notes
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-    
+
+    diff_staff = idx_staff[1] - idx_staff[0]
     # Quarter note + Eighth note
     disk_filter = generate_disk_filter(diff_staff//2.5)
     img_note1 = opening(img_div, disk_filter) 
@@ -273,7 +273,7 @@ for it in range(len(img_div_set)):
     contour_dash = []
     canvas = np.zeros((img_note3.shape))
     for i in range(len(contours3)):
-        if contour_area_set[i] > median + 1.3 * std:
+        if contour_area_set[i] > median + 0.7 * std:
             contour_dash.append(contours3[i])   
             
     cv2.drawContours(canvas, contour_dash, -1, 1)  
@@ -282,22 +282,19 @@ for it in range(len(img_div_set)):
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
     # b) Detect whole and half notes
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-    staff_line_filter = np.ones([1, 20])
-    staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
+    six_lines_filter = np.ones([1, 100])
+    six_lines, idx_six = get_staff_lines(img_div, dash_filter, six_lines_filter)
     
-    # Deal with the half and whole note below the 5th line
-    #staff_lines = cv2.dilate(staff_lines, staff_line_filter, iterations = 1)
-    
-    img_note = remove_staff_lines(img_div, staff_lines)
-    #img_note_ = cv2.dilate(img_note, np.ones((2, 2)), iterations = 1)
+    img_note = remove_staff_lines(img_div, six_lines)
+    img_note = cv2.dilate(img_note, np.ones((2, 2)), iterations = 1)
     img_note_fill = scipy.ndimage.binary_fill_holes(img_note).astype('uint8')
     img_note_fill[img_note_fill == 1] = 255
     img_note2 = img_note_fill - img_note
     
-    disk1 = generate_disk_filter(diff_staff // 4)
-    disk2 = generate_disk_filter(diff_staff // 2.5)
-    tmp = cv2.erode(img_note2, disk1, iterations = 1)
-    img_note_new = cv2.dilate(tmp, disk2, iterations = 1)
+    #disk1 = generate_disk_filter(diff_staff // 10)
+    disk2 = generate_disk_filter(diff_staff // 4)
+    #tmp = cv2.erode(img_note2, disk1, iterations = 1)
+    img_note_new = cv2.dilate(img_note2, disk2, iterations = 1)
     
     im2, contours2, hierarchy2 = cv2.findContours(img_note_new, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)          
     moments2 = compute_moments(contours2)   
@@ -348,13 +345,16 @@ for it in range(len(img_div_set)):
     note_type = list(note_type[:, 1])   
     output_note_type.append(note_type)
     
-    
-cv2.imshow('test', img_bw)
-# =============================================================================
-# cv2.imshow('test0', staff_lines)
-# cv2.imshow('test1', img_note_new)
-# cv2.imshow('test2', img_div)
-# =============================================================================
+#cv2.imshow('test', img_bw)
+#cv2.imshow('test0', staff_lines)
+cv2.imshow('test0', img_note)
+cv2.imshow('test1', img_note_fill)
+cv2.imshow('test2', six_lines)
+
+cv2.imshow('test0', img_note)
+cv2.imshow('test1', img_note_fill)
+cv2.imshow('test2', img_note_new)
+
 
 cv2.waitKey(1)
 cv2.destroyAllWindows() 
