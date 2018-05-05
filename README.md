@@ -5,7 +5,7 @@ Digital Image Processsing Final Project
 Sheet Music Intelligent Reader & Keyboard Simulator (SMIRKs)
 
 Folder Structure:
-'''bash
+```bash
 ├── GUI
 │   ├── Gui.py % Graphical User Interface 
 │   ├── SMIRKs_head.py
@@ -21,5 +21,5 @@ Folder Structure:
 │   ├── Symphony\ No.9.png
 │   └── Twinkle\ Twinkle\ Little\ Star.png
 └── __init__.py
-'''
+```
 3 directories, 12 files
