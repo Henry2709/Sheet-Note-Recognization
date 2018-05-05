@@ -241,7 +241,7 @@ for it in range(len(img_div_set)):
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
     # Detect types
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
-    img_div = img_div_set[0]
+    img_div = img_div_set[it]
        
     div_staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
@@ -285,8 +285,8 @@ for it in range(len(img_div_set)):
     six_lines_filter = np.ones([1, 100])
     six_lines, idx_six = get_staff_lines(img_div, dash_filter, six_lines_filter)
     
-    img_note = remove_staff_lines(img_div, six_lines)
-    img_note = cv2.dilate(img_note, np.ones((2, 2)), iterations = 1)
+    img_note_ = remove_staff_lines(img_div, six_lines)
+    img_note = cv2.dilate(img_note_, np.ones((2, 2)), iterations = 1)
     img_note_fill = scipy.ndimage.binary_fill_holes(img_note).astype('uint8')
     img_note_fill[img_note_fill == 1] = 255
     img_note2 = img_note_fill - img_note
@@ -351,7 +351,8 @@ cv2.imshow('test0', img_note)
 cv2.imshow('test1', img_note_fill)
 cv2.imshow('test2', six_lines)
 
-cv2.imshow('test0', img_note)
+cv2.imshow('test0', img_note_)
+cv2.imshow('test00', img_note)
 cv2.imshow('test1', img_note_fill)
 cv2.imshow('test2', img_note_new)
 

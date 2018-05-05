@@ -80,7 +80,7 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
 
     idx_staff = []
     for i in range(height):
-        if hist_row[i] > 0.01 * width:
+        if hist_row[i] > 0.1 * width:
             idx_staff.append(i)
             
     # Modfiy the index of staff to make sure it only has 5 entries
@@ -106,7 +106,6 @@ def remove_staff_lines(img, staff_lines):
     image_result[staff_lines == 255] = 0
     
     # Use closing to fill up missing parts
-    # tmp = diff_staff // 2
     tmp = 2
     # 1. Vertical closing
     vertical_filter = np.ones([tmp, 1]) 
