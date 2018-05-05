@@ -67,6 +67,7 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
     temp = cv2.dilate(img, dash_filter, iterations = 1)
     # Erosion: keep the horizontal lines only
     img_staff_lines = cv2.erode(temp, staff_line_filter, iterations = 1)
+    img_staff_lines = cv2.dilate(img_staff_lines, staff_line_filter, iterations = 1)
     
     height, width = img_staff_lines.shape
     
@@ -74,15 +75,15 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
     for i in range(height):
         hist_row[i] = np.sum(img_staff_lines[i, :] / 255)  
     
-#     plt.figure
-#     plt.bar(range(height), hist_row)
-      
+    #plt.figure
+    #plt.bar(range(height), hist_row)
+
     idx_staff = []
     for i in range(height):
-        if hist_row[i] > 0.1 * width:
+        if hist_row[i] > 0.01 * width:
             idx_staff.append(i)
             
-    # modfiy the index of staff to fit different size of images
+    # Modfiy the index of staff to make sure it only has 5 entries
     idx_staff_new = []
     flag = True
     for i in range(len(idx_staff) - 1):
@@ -99,21 +100,21 @@ def get_staff_lines(img, dash_filter, staff_line_filter):
     
     return img_staff_lines, idx_staff_new
 
-def remove_staff_lines(img, staff_lines, diff_staff):
+def remove_staff_lines(img, staff_lines):
     image_result = copy.copy(img)
+    
     image_result[staff_lines == 255] = 0
     
     # Use closing to fill up missing parts
-    tmp = diff_staff // 2 + 1
+    # tmp = diff_staff // 2
+    tmp = 2
     # 1. Vertical closing
     vertical_filter = np.ones([tmp, 1]) 
-
     image_result = cv2.dilate(image_result, vertical_filter, iterations = 1)
     image_result = cv2.erode(image_result, vertical_filter, iterations = 1)
 
     # 2. Horizontal closing
     horizontal_filter = np.ones([1, tmp])
-
     image_result = cv2.dilate(image_result, horizontal_filter, iterations = 1)
     image_result = cv2.erode(image_result, horizontal_filter, iterations = 1)
     
@@ -193,6 +194,6 @@ def determine_edge(hist, median):
             start = i - 1
             
         if hist[i] <= median and count == 1:
-            end = i - 1
+            end = i
             break
     return start, end

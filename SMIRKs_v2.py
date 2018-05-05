@@ -15,7 +15,7 @@ from SMIRKs_head import *
 # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
 # Setup
 # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
-img = cv2.imread('music.png')
+img = cv2.imread('Twinkle Twinkle Little Star.png')
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 (thresh, img_bw) = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 img_bw = convert(img_bw)
@@ -161,30 +161,31 @@ for it in range(len(img_div_set)):
     else:
          type_clef = 0; # Bass
          
-    output_clef.append(type_clef) 
+    #output_clef.append(type_clef) 
     
     # Deal with the special situation when the type of clef is 'bass'
+
     if type_clef == 0:
-        count = 0
-        for i in range(clef_end, wid_div):
-            
-            if hist_col[i] > median and count == 0:
-                count += 1
+         count = 0
+         for i in range(clef_end, wid_div):       
+             if hist_col[i] > median and count == 0:
+                 count += 1 
+             if hist_col[i] <= median and count == 1:
+                 clef_end = i
+                 break
+
                 
-            if hist_col[i] <= median and count == 1:
-                clef_end = i
-                break
-                
-    img_tmp = img_div[:, clef_end : -1]           
+    #img_tmp = img_div[:, clef_end : -1]           
     # After determine the type of clef, we no longer need them.
     img_div_set[it] = img_div[:, clef_end : -1]
 
 # Show!
 for i in range(len(img_div_set)):    
     cv2.imshow('test'+str(i), img_div_set[i]) 
+
 # =============================================================================
 # cv2.imshow('test', img_bw)
-# cv2.imshow('test', img_tmp)
+# cv2.imshow('test1', img_tmp)
 # =============================================================================
 cv2.waitKey(1)
 cv2.destroyAllWindows()
@@ -240,7 +241,7 @@ for it in range(len(img_div_set)):
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
     # Detect types
     # ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== 
-    img_div = img_div_set[2]
+    img_div = img_div_set[it]
     div_staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
     diff_staff = idx_staff[1] - idx_staff[0]
        
@@ -276,21 +277,25 @@ for it in range(len(img_div_set)):
             contour_dash.append(contours3[i])   
             
     cv2.drawContours(canvas, contour_dash, -1, 1)  
- 
     moments_dash = compute_moments(contour_dash)
     
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
     # b) Detect whole and half notes
     # ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-    img_note = remove_staff_lines(img_div, div_staff_lines, diff_staff)
-    img_note = cv2.dilate(img_note, np.ones((2, 2)), iterations = 1)
+    staff_line_filter = np.ones([1, 20])
+    staff_lines, idx_staff = get_staff_lines(img_div, dash_filter, staff_line_filter)
     
+    # Deal with the half and whole note below the 5th line
+    #staff_lines = cv2.dilate(staff_lines, staff_line_filter, iterations = 1)
+    
+    img_note = remove_staff_lines(img_div, staff_lines)
+    #img_note_ = cv2.dilate(img_note, np.ones((2, 2)), iterations = 1)
     img_note_fill = scipy.ndimage.binary_fill_holes(img_note).astype('uint8')
     img_note_fill[img_note_fill == 1] = 255
     img_note2 = img_note_fill - img_note
     
     disk1 = generate_disk_filter(diff_staff // 4)
-    disk2 = generate_disk_filter(diff_staff // 2)
+    disk2 = generate_disk_filter(diff_staff // 2.5)
     tmp = cv2.erode(img_note2, disk1, iterations = 1)
     img_note_new = cv2.dilate(tmp, disk2, iterations = 1)
     
@@ -345,8 +350,11 @@ for it in range(len(img_div_set)):
     
     
 cv2.imshow('test', img_bw)
-cv2.imshow('test1', img_note3)
-cv2.imshow('test2', img_div)
+# =============================================================================
+# cv2.imshow('test0', staff_lines)
+# cv2.imshow('test1', img_note_new)
+# cv2.imshow('test2', img_div)
+# =============================================================================
 
 cv2.waitKey(1)
 cv2.destroyAllWindows() 
